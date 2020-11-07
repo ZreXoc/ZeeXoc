@@ -1,0 +1,42 @@
+:root {
+    --col-1: #000000;
+    --col-2: #ffffff;
+    --col-3: #ffffff;
+}
+
+body {
+    margin: 0;
+    background-color: var(--col-1);
+}
+
+#action-area {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+}
+
+.act-window[l-w-type="container"] {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    border: var(--col-2) 1px solid;
+    color: var(--col-3);
+    background-color: var(--col-1);
+    cursor: default;
+}
+
+.act-window[l-w-type="container"]>[L-w-type="header"] {
+    background-color: var(--col-2);
+    color: var(--col-1);
+    user-select: none;
+}
+
+.act-window[l-w-type="container"]>[L-w-type="header"]>span {
+    cursor: default;
+}
+.act-window[l-w-type="container"]>[L-w-type="body"]>iframe {
+    height: 100%;
+    width: 100%;
+}
+
+
