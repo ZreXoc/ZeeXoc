@@ -41,9 +41,7 @@ const LBasic = {
             dmW = document.documentElement.clientWidth || document.body.clientWidth;
             dmH = document.documentElement.clientHeight || document.body.clientHeight;
             sent.r = sent.r || dmW - dContainer.offsetWidth;
-            sent.t = sent.t;
             sent.b = sent.b || dmH - dContainer.offsetHeight;
-            sent.n = sent.n;
             document.addEventListener('mousemove', function (e) {
                 if (!isDrag) return;
 
@@ -68,13 +66,15 @@ const LBasic = {
                 dContainer.style.top = slideTop + 'px';
             });
         });
-        document.addEventListener('mouseup',function() {
+        window.addEventListener('mouseup',endDrag);
+        function endDrag() {
+            console.log(1)
             isDrag=false;
             if(dragEle.dragType=='return') {
                 dContainer.style.left = sentX + 'px';
                 dContainer.style.top = sentY + 'px';
             }
-        });
+        }
     }
 }
 export default LBasic;
