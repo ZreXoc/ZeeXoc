@@ -97,7 +97,7 @@ function LDrag(spec) {
                 isDragging: this.isDragging,
                 getInitialClientOffset: this.getInitialClientOffset.bind(this),
                 getClientOffset: this.getClientOffset.bind(this),
-                oldPosition:this.getPosition(),
+                oldPosition: this.getPosition(),
                 getPosition: this.getPosition.bind(this),
                 setPosition: this.setPosition.bind(this),
             }
@@ -151,8 +151,11 @@ function LDrag(spec) {
                 return this.clientOffset;
             }
 
-            getPosition(){
-                return {X:Number(this.dragItem.style.left.replace('px','')),Y:Number(this.dragItem.style.top.replace('px',''))}
+            getPosition() {
+                return {
+                    X: Number(this.dragItem.style.left.replace('px', '')),
+                    Y: Number(this.dragItem.style.top.replace('px', ''))
+                }
             }
 
             setPosition(position) {
@@ -184,39 +187,128 @@ function LDrag(spec) {
 
 class LyWindow extends Component {
     static _initialClientOffset = {};
-    static _clientOffset = {};
 
     static get initialClientOffset() {
         return this._initialClientOffset;
     }
 
     static set initialClientOffset(value) {
-        this._initialClientOffset = value;
+        this._initialClientOffset.X = value.X;
+        this._initialClientOffset.Y = value.Y;
     }
+
+    static _clientOffset = {};
 
     static get clientOffset() {
         return this._clientOffset;
     }
 
     static set clientOffset(value) {
-        this._clientOffset = value;
+        this._clientOffset.X = value.X;
+        this._clientOffset.Y = value.Y;
+    }
+
+    static getOffset(e) {
+        if (e.target) return {X: e.clientX, Y: e.clientY}
+    }
+
+    static _mouseState;
+
+
+    static get mouseState() {
+        return this._mouseState;
+    }
+
+    static set mouseState(value) {
+        if (value === 'down' || value === 'moving' || value === 'dragging' || value === 'noneAct') LyWindow._mouseState = value;
+    }
+
+    _onMouseDown(e) {
+        LyWindow.initialClientOffset = LyWindow.getOffset(e);
+        LyWindow._mouseState = 'down';
+    }
+
+    _onMouseMove(e) {
+        LyWindow.mouseState = 'moving'
+        LyWindow.clientOffset = LyWindow.getOffset(e)
+        //按下并移动即拖拽
+        if (LyWindow.mouseState === 'down') {
+            LyWindow.mouseState = 'dragging'
+            this._doDrag();
+        }
+    }
+
+    _onMouseUp(e) {
+        LyWindow.mouseState = 'noneAct'
+    }
+
+    static _dragItem;
+
+    static get dragItem() {
+        return this._dragItem;
+    }
+
+    _dragItem(e) {
+        if (!e) return LyWindow.dragItem;
+        LyWindow._dragItem = e.target || e;
+    }
+
+    static _dragState = 0;
+
+    static get dragState() {
+        return this._dragState;
+    }
+
+    static set dragState(value) {
+        if (!value) return LyWindow._dragState;
+        LyWindow._dragState = Number(value);
+    }
+
+    _doDrag() {
+        switch (LyWindow.dragState) {
+            case 0:
+                LyWindow.dragState = 1;
+                this._beginDrag();
+                break;
+            case 1:
+            case 2:
+                LyWindow.dragState = 2
+                this._onDragging();
+                break;
+        }
+        if (LyWindow._mouseState !== 'dragging') {
+            LyWindow._mouseState = 0;
+            this._endDrag();
+        }
+    }
+
+    _beginDrag() {
+        console.log('beginDrag!')
+    }
+
+    _onDragging() {
+        console.log(LyWindow.initialClientOffset)
+    }
+
+    _endDrag() {
+        LyWindow._dragState = 0
+        console.log(LyWindow.clientOffset)
+        console.log('endDrag!')
     }
 
     constructor(props) {
         super(props);
-        React.forwardRef((props, ref) => {
-           this.item = ref;
-            console.log(ref)
-        });
-        ;
-        console.log(props)
-        console.log(this.item)
+        document.addEventListener('mousedown', (e) => this._onMouseDown(e))
+        document.addEventListener('mousemove', (e) => this._onMouseMove(e))
+        document.addEventListener('mouseup', (e) => this._onMouseUp(e))
+        //document.addEventListener('mouseup',(e)=>console.log(LyWindow.initialClientOffset,LyWindow.clientOffset))
     }
 
     render() {
-        return null
+        return null;
     }
 }
+
 
 export {LDrag};
 export {LyWindow};

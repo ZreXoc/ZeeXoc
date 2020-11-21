@@ -58,7 +58,7 @@ const spec = {
     }
 }
 
-@LDrag(spec)
+//LDrag(spec)
 class LWindow extends Component {
     setClass(type) {
         switch (type) {
@@ -105,7 +105,7 @@ class LWindow extends Component {
     render() {
         return (
             <>
-                <LyWindow ref={this.ref}></LyWindow>
+                <LyWindow/>
                 <div id={"LWindow-" + this.state.index}
                      className={this.state.class}
                      l-w-type='container'
