@@ -1,12 +1,8 @@
 import React, {Component} from 'react';
-import {DragDropContext, DragSource, DropTarget} from 'react-dnd';
-import HTMLBackend from "react-dnd-html5-backend";
 import './Stylesheet/basic.css';
 import LWindow from "./Scripts/lyr-window";
 
-@DragDropContext(HTMLBackend)
 class App extends Component {
-
     render() {
         let lWindow = {
             num: 0,
@@ -14,7 +10,7 @@ class App extends Component {
         return (
             <div id="basic-window">
                 <div id="action-area">
-                    <LWindow index={lWindow.num++} type={"act"} draggable={true}>
+                    <LWindow index={lWindow.num++} type={"act"}>
                         <div>
                             header
                         </div>

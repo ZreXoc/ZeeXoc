@@ -1,12 +1,12 @@
 :root {
     --col-1: #000000;
     --col-2: #ffffff;
-    --col-3: #ffffff;
+    --col-3: #000000;
 }
 
 body {
     margin: 0;
-    background-color: var(--col-1);
+    background-color: var(--col-3);
 }
 
 #action-area {
@@ -20,12 +20,19 @@ body {
     margin: 0;
     padding: 0;
     border: var(--col-2) 1px solid;
-    color: var(--col-3);
-    background-color: var(--col-1);
-    cursor: default;
 }
 
 .act-window[l-w-type="container"]>[L-w-type="header"] {
+    background-color: var(--col-2);
+    color: var(--col-1);
+    user-select: none;
+}
+.act-window[l-w-type="container"]>[L-w-type="body"] {
+    margin: 0.5em;
+    background-color: var(--col-1);
+    color: var(--col-2);
+}
+.act-window[l-w-type="container"]>[L-w-type="footer"] {
     background-color: var(--col-2);
     color: var(--col-1);
     user-select: none;
@@ -38,5 +45,7 @@ body {
     height: 100%;
     width: 100%;
 }
-
+.act-window[l-w-type="container"]>[L-w-type="footer"]>span {
+    cursor: default;
+}
 
