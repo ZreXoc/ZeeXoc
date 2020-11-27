@@ -1,41 +1,57 @@
 import React, {Component} from 'react';
+import * as Lyrw from './Lyrw/Lyrw.js'
 import './Stylesheet/basic.css';
-import LWindow from "./Scripts/lyr-window";
 
-class App extends Component {
-    render() {
-        let lWindow = {
-            num: 0,
+@Lyrw.setWindow()
+class TextBox extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            lyrw: this.props.lyrw
         }
+    }
+
+    render() {
         return (
-            <div id="basic-window">
-                <div id="action-area">
-                    <LWindow index={lWindow.num++} type={"act"}>
-                        <div>
-                            header
-                        </div>
-                        <div>
-                            <p>this is a text</p>
-                            <p>this is a text</p>
-                            <p>this is a text</p>
-                            <p>this is a text</p>
-                            <p>this is a text</p>
-                        </div>
-                        <div>
-                            footer
-                        </div>
-                    </LWindow>
-                </div>
-            </div>
-        );
+            <>
+                <Lyrw.Header>
+                    <span>kksk</span>
+                </Lyrw.Header>
+                <Lyrw.Body>
+                    <span>kksk</span>
+                </Lyrw.Body>
+                <Lyrw.Footer>
+                    <span>kksk</span>
+                </Lyrw.Footer>
+            </>
+        )
     }
 }
 
-/*
-function App() {
+class Windows extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            lyrw: {
+                conf: {
+                    temp: 'dd'
+                },
+            }
+        }
+    }
 
+    render() {
+        return (<TextBox lyrw={{id: 'textBox', ...this.state.lyrw}}/>)
+    }
 }
-*/
+
+class App extends Component {
+    render() {
+        return (
+            <Windows/>
+        );
+    }
+}
 
 
 export default App;
