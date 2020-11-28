@@ -2,18 +2,26 @@ import React, {Component} from 'react';
 import * as Lyrw from './Lyrw/Lyrw.js'
 import './Stylesheet/basic.css';
 
-@Lyrw.setWindow()
+//@Lyrw.setWindow()
 class TextBox extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            lyrw: this.props.lyrw
+            lyrw: {
+                ...this.props.lyrw,
+                mouseDown(e, monitor) {
+                    monitor.item.style.left = monitor.initialClientOffset.X + 'px';
+                    monitor.item.style.top = monitor.initialClientOffset.Y + 'px';
+                    console.log(monitor.initialClientOffset)
+                }
+            },
+            wState: {}
         }
     }
 
     render() {
         return (
-            <>
+            <Lyrw.Container conf={this.state.lyrw} getData={(state) => this.setState({wState: state})}>
                 <Lyrw.Header>
                     <span>kksk</span>
                 </Lyrw.Header>
@@ -23,7 +31,7 @@ class TextBox extends Component {
                 <Lyrw.Footer>
                     <span>kksk</span>
                 </Lyrw.Footer>
-            </>
+            </Lyrw.Container>
         )
     }
 }
@@ -33,9 +41,10 @@ class Windows extends Component {
         super(props);
         this.state = {
             lyrw: {
-                conf: {
-                    temp: 'dd'
-                },
+                drag: {
+                    isDrag: true,
+
+                }
             }
         }
     }
