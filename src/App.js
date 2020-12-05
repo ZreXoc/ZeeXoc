@@ -12,7 +12,6 @@ class TextBox extends Component {
                 mouseDown(e, monitor) {
                     monitor.item.style.left = monitor.initialClientOffset.X + 'px';
                     monitor.item.style.top = monitor.initialClientOffset.Y + 'px';
-                    console.log(monitor.initialClientOffset)
                 }
             },
             wState: {}
@@ -43,7 +42,6 @@ class Windows extends Component {
             lyrw: {
                 drag: {
                     isDrag: true,
-
                 }
             }
         }
@@ -57,7 +55,9 @@ class Windows extends Component {
 class App extends Component {
     render() {
         return (
-            <Windows/>
+            <>
+                <Windows/>
+            </>
         );
     }
 }
