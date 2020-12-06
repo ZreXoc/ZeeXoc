@@ -60,6 +60,7 @@ class LRef {
     }
 
     _position = {};
+    _size = {};
     //TODO _size = {w,h}
 
     /**
@@ -102,6 +103,11 @@ class LRef {
 
     constructor(element = document) {
         this.current = element;
+        setInterval(()=>{
+            let position = {X:parseInt(element.style.left.match(/\d+/)||0),Y:parseInt(element.style.top.match(/\d+/)||0)}
+            window.ee = element.style;
+            if (this.position()!==position) this.position({ul:position})
+        },1000);
         element.addEventListener('mousedown', (e) => this.initialClientOffset(this.getOffset(e)))
         element.addEventListener('mousemove', (e) => {
             this.clientOffset(this.getOffset(e));
