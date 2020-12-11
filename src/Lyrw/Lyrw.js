@@ -1,47 +1,60 @@
 import React, {Component} from 'react';
 
-/*function setWindow() {
-    return function (WComp) {
-        return class Lyrw extends WComp {
-            onMouseDown(e) {
-                let X = e.clientX, Y = e.clientY;
-                this.setState({
-                    monitor: {
-                        initialClientOffset: {X,Y}
-                    }
-                })
-                this.state.onMouseDown(e,this.state);
-            }
-
-            setListener() {
-                this.state.ref.current.addEventListener('onMouseDown', (e) => this.onMouseDown(e))
-            }
-
-            constructor(props) {
-                super(props);
-                this.state = {
-                    ...this.props.lyrw,
-                    ref: React.createRef(),
-                    monitor: {
-                        initialClientOffset: {},
-                        clientOffset: {}
-                    }
-                }
-            }
-
-            componentDidMount() {
-                this.setListener();
-
-            }
-
-            render() {
-                return (
-                    <div w-type='container' ref={this.state.ref}>{super.render()}</div>
-                )
-            }
-        }
+class Offset {
+    /**
+     * @property {Number} X
+     * @property {Number} Y
+     */
+    _e = {}
+    get e() {return this._e}
+    set e(offset) {
+        this._e = Offset.pure(offset);
     }
-}*/
+
+    static pure(offset){
+        if (!offset) return {X:null,Y:null};
+        if (offset.e) return {X:offset.e.X,Y:offset.e.Y};
+        if (offset instanceof Array) return  {X:offset[0],Y:offset[1]};
+        return {X:offset.X,Y:offset.Y};
+    }
+
+    /**
+     * @param {Offset|Object} offsets
+     */
+    static add(...offsets) {
+        let offset = new Offset();
+        offset.add(...offsets);
+        return offset
+    }
+
+    /**
+     * @param offsets
+     */
+    add(...offsets) {
+        let eX = 0, eY = 0
+        offsets.forEach((offset) => {
+            let o = Offset.pure(offset)
+            eX += o.X;
+            eY += o.Y;
+        })
+        this.e = [eX,eY]
+    }
+
+    /** @param {Offset|Object} offset */
+    minus(offset) {
+        let o = Offset.pure(offset);
+        let X,Y;
+        X = this.e.X - o.X;
+        Y = this.e.Y - o.Y;
+        this.e = {X, Y};
+    }
+
+    /** @param {Offset|Object} offset */
+    constructor(offset=null) {
+        this.e = offset
+    }
+}
+
 class LRef {
     current = {};
     mouseState = '';
@@ -61,6 +74,7 @@ class LRef {
 
     _position = {};
     _size = {};
+
     //TODO _size = {w,h}
 
     /**
@@ -103,11 +117,14 @@ class LRef {
 
     constructor(element = document) {
         this.current = element;
-        setInterval(()=>{
-            let position = {X:parseInt(element.style.left.match(/\d+/)||0),Y:parseInt(element.style.top.match(/\d+/)||0)}
+        setInterval(() => {
+            let position = {
+                X: parseInt(element.style.left.match(/\d+/) || 0),
+                Y: parseInt(element.style.top.match(/\d+/) || 0)
+            }
             window.ee = element.style;
-            if (this.position()!==position) this.position({ul:position})
-        },1000);
+            if (this.position() !== position) this.position({ul: position})
+        }, 1000);
         element.addEventListener('mousedown', (e) => this.initialClientOffset(this.getOffset(e)))
         element.addEventListener('mousemove', (e) => {
             this.clientOffset(this.getOffset(e));
@@ -183,6 +200,7 @@ class Container extends Component {
         })*/
         this.setState((preState, props) => {
             preState.lRef = new LRef(this.state.ref.current);
+            preState.Offset = Offset.add({X: 1, Y: 2}, [2,9]);
             delete preState.ref;
         }, () => {
             this.setListener();
