@@ -17,6 +17,13 @@ class Offset {
         if (offset instanceof Array) return  {X:offset[0],Y:offset[1]};
         return {X:offset.X,Y:offset.Y};
     }
+    static equal(...offsets){
+        return offsets.every(offset=>{
+            if (Offset.pure(offset).X===Offset.pure(offsets[0]).X
+                &&Offset.pure(offset).Y===Offset.pure(offsets[0]).Y)return true;
+            return false;
+        })
+    }
 
     /**
      * @param {Offset|Object} offsets
@@ -54,7 +61,7 @@ class Offset {
         this.e = offset
     }
 }
-
+export {Offset}
 class LRef {
     current = {};
     mouseState = '';
@@ -117,7 +124,7 @@ class LRef {
 
     constructor(element = document) {
         this.current = element;
-        setInterval(() => {
+        /*setInterval(() => {
             let position = {
                 X: parseInt(element.style.left.match(/\d+/) || 0),
                 Y: parseInt(element.style.top.match(/\d+/) || 0)
@@ -128,7 +135,7 @@ class LRef {
         element.addEventListener('mousedown', (e) => this.initialClientOffset(this.getOffset(e)))
         element.addEventListener('mousemove', (e) => {
             this.clientOffset(this.getOffset(e));
-        });
+        });*/
     }
 }
 
