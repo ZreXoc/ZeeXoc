@@ -10,6 +10,8 @@ body {
 }
 
 [w-type="container"] {
+    display: flex;
+    flex-direction: column;
     position: absolute;
     margin: 0;
     padding: 0;
@@ -22,11 +24,13 @@ body {
     user-select: none;
 }
 [w-type="container"]>[w-type="body"] {
+    flex-grow: 1;
     margin: 0.5em;
     background-color: var(--col-1);
     color: var(--col-2);
 }
 [w-type="container"]>[w-type="footer"] {
+    bottom: 0;
     background-color: var(--col-2);
     color: var(--col-1);
     user-select: none;

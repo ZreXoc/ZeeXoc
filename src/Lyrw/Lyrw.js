@@ -6,21 +6,25 @@ class Offset {
      * @property {Number} Y
      */
     _e = {}
-    get e() {return this._e}
+    get e() {
+        return this._e
+    }
+
     set e(offset) {
         this._e = Offset.pure(offset);
     }
 
-    static pure(offset){
-        if (!offset) return {X:null,Y:null};
-        if (offset.e) return {X:offset.e.X,Y:offset.e.Y};
-        if (offset instanceof Array) return  {X:offset[0],Y:offset[1]};
-        return {X:offset.X,Y:offset.Y};
+    static pure(offset) {
+        if (!offset) return {X: null, Y: null};
+        if (offset.e) return {X: offset.e.X, Y: offset.e.Y};
+        if (offset instanceof Array) return {X: offset[0], Y: offset[1]};
+        return {X: offset.X, Y: offset.Y};
     }
-    static equal(...offsets){
-        return offsets.every(offset=>{
-            if (Offset.pure(offset).X===Offset.pure(offsets[0]).X
-                &&Offset.pure(offset).Y===Offset.pure(offsets[0]).Y)return true;
+
+    static equal(...offsets) {
+        return offsets.every(offset => {
+            if (Offset.pure(offset).X === Offset.pure(offsets[0]).X
+                && Offset.pure(offset).Y === Offset.pure(offsets[0]).Y) return true;
             return false;
         })
     }
@@ -34,6 +38,13 @@ class Offset {
         return offset
     }
 
+    static minus(offsetA, offsetB) {
+        let offset = new Offset(offsetA);
+        offset.minus(offsetB);
+        return offset;
+    }
+
+
     /**
      * @param offsets
      */
@@ -44,24 +55,26 @@ class Offset {
             eX += o.X;
             eY += o.Y;
         })
-        this.e = [eX,eY]
+        this.e = [eX, eY]
     }
 
     /** @param {Offset|Object} offset */
     minus(offset) {
         let o = Offset.pure(offset);
-        let X,Y;
+        let X, Y;
         X = this.e.X - o.X;
         Y = this.e.Y - o.Y;
         this.e = {X, Y};
     }
 
     /** @param {Offset|Object} offset */
-    constructor(offset=null) {
+    constructor(offset = null) {
         this.e = offset
     }
 }
+
 export {Offset}
+
 class LRef {
     current = {};
     mouseState = '';
@@ -142,108 +155,69 @@ class LRef {
 export {LRef}
 
 class Container extends Component {
-    onMouseDown(e) {
-        this.setState((preState, props) => {
-            preState.lRef.mouseState = 'down';
+    _position = {
+        ul: new Offset(),   //左上
+        lr: new Offset()    //右下
+    }
+
+    get position() {
+        return this._position;
+    }
+
+    set position(offset) {
+        let {ul, lr} = offset;
+        if (ul) this.position.ul.e = Offset.pure(ul);
+        if (lr) this.position.lr.e = Offset.pure(lr);
+    }
+
+    setPosition(ul, lr) {
+        this.position = {ul, lr}
+        this.setState({
+            style: {
+                left: this.position.ul.e.X + 'px',
+                top: this.position.ul.e.Y + 'px',
+                width: this.position.lr.e.X-this.position.ul.e.X + 'px',
+                height: this.position.lr.e.Y-this.position.ul.e.Y + 'px',
+            }
         })
     }
-
-    onMouseMove(e) {
-        let mouseState = this.state.lRef.mouseState === 'down' || this.state.lRef.mouseState === 'dragging' ? 'dragging' : 'over';
-        this.setState((preState, props) => {
-            preState.lRef.mouseState = mouseState;
-        });
-
-        this.onDragging(e);
-
-        if (this.state.mouseMove) this.state.mouseMove(e, {item: this.state.lRef.current, ...this.state.monitor});
-    }
-
-    onMouseUp(e) {
-        this.setState((preState, props) => {
-            preState.lRef.mouseState = 'up';
-        })
-    }
-
-    onMouseEnter(e) {
-        this.setState((preState, props) => {
-            preState.lRef.mouseState = 'enter';
-        })
-    }
-
-    onMouseLeave(e) {
-        this.setState((preState, props) => {
-            preState.lRef.mouseState = 'leave';
-        })
-    }
-
-    onDragging(e) {
-        if (this.state.lRef.mouseState !== 'dragging') return;
-
-    }
-
-    setListener() {
-        let events = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave']
-        //TODO 事件监听在父级中设置，监听document.
-        events.forEach((name, index) =>
-            this.state.lRef.current.addEventListener(name.toLocaleLowerCase(), (e) => this['on' + name.charAt(0).toUpperCase() + name.slice(1)](e))
-        );
-    }
-
 
     constructor(props) {
         super(props);
         this.state = {
-            ...this.props.conf,
-            ref: React.createRef(),
-            lRef: {},
+            style: {}
         }
     }
 
     componentDidMount() {
-        /*this.setState((preState, props)=>{
-            preState.item = this.state.ref.current;
-            delete preState.ref;
-        })*/
-        this.setState((preState, props) => {
-            preState.lRef = new LRef(this.state.ref.current);
-            preState.Offset = Offset.add({X: 1, Y: 2}, [2,9]);
-            delete preState.ref;
-        }, () => {
-            this.setListener();
-        })
-        this.props.getData(this.state.lRef);
+        this.setPosition([Math.floor(Math.random()*500), Math.floor(Math.random()*500)], null)
     }
 
     render() {
         return (
-            <div w-type='container' ref={this.state.ref}>{this.props.children}</div>
+            <div
+                w-type='container'
+                style={{...this.state.style}}
+                ref={this.state.ref}
+                onClick={() => {
+                    this.setPosition([Math.floor(Math.random()*500), Math.floor(Math.random()*500)], null)
+                    console.log(this._position)
+                }}
+            >{this.props.children}</div>
         )
     }
 }
 
-class Header extends Component {
-    render() {
-        return (
-            <div style={{...this.props.style}} w-type='header'>{this.props.children}</div>
-        )
-    }
+function Header(props) {
+    return (<div style={{...props.style}} w-type='header'>{props.children}</div>)
 }
 
-class Body extends Component {
-    render() {
-        return (
-            <div style={{...this.props.style}} w-type='body'>{this.props.children}</div>
-        )
-    }
+function Body(props) {
+    return (<div style={{...props.style}} w-type='body'>{props.children}</div>)
 }
 
-class Footer extends Component {
-    render() {
-        return (
-            <div style={{...this.props.style}} w-type='footer'>{this.props.children}</div>
-        )
-    }
+function Footer(props) {
+    return (<div style={{...props.style}} w-type='footer'>{props.children}</div>)
 }
 
 //export {setWindow};
