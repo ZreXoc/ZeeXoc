@@ -1,19 +1,24 @@
-import React, {Component} from 'react';
-import * as Lyrw from './Lyrw/Lyrw'
+import React, {Component} from 'react';/*
 import {Container, Header, Body, Footer} from './Lyrw/Lyrw'
-import {Offset} from './Lyrw/Lyrw'
+import {Offset} from './Lyrw/Lyrw'*/
 import './Stylesheet/basic.css';
+import {Point2D} from "./Lyros";
 
-//@Lyrw.setWindow()
-class NewWindow extends Component {
+/*class NewWindow extends Component {
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        console.log(nextProps)
+        if (nextProps.conf.focus!==this.props.conf.id) return false;
+        return true;
+    }
+
     constructor(props) {
         super(props);
+        //console.log(logo)
     }
 
     componentDidMount() {
         //console.log(this.ref)
         //this.ref.addEventListener('mousedown', e => console.log(e))
-
         this.ref.addEventListener('mousedown',e=>this.props.focus(this.props.conf.id))
         this.ref.addEventListener('click',e=>this.props.focus(this.props.conf.id))
     }
@@ -22,9 +27,10 @@ class NewWindow extends Component {
         return (
             <div ref={ref => this.ref = ref}>
                 <Container
-                    getData={(state) => this.setState({wState: state})}>
+
+                    conf={(conf) => this.setState({conf: conf})}>
                     <Header>
-                        <span>kksk</span>
+                        <span>{this.props.conf.id}</span>
                     </Header>
                     <Body>
                         <span>kksk</span>
@@ -49,7 +55,7 @@ class Windows extends Component {
     }
 
     set mouse(value) {
-        if (value.target !== this._mouse.target) console.log(3, value.target, this.mouse.target)/*this.setState({mouse:{target:value.target}})*/
+        if (value.target !== this._mouse.target) console.log(3, value.target, this.mouse.target)/!*this.setState({mouse:{target:value.target}})*!/
         Object.assign(this._mouse, value);
     }
 
@@ -115,22 +121,49 @@ class Windows extends Component {
     componentDidMount() {
         this.setListener();
     }
-
+    windowState(state){
+        this.setState({
+            windowState:{
+                [state.id]:state
+            }
+        })
+    }
     render() {
         return (
             <div ref={ref => this.event = ref}>
-                <NewWindow conf={{id: 'textBox'}} focus={(ele) => this.setState({focus: ele})}/>
-                <NewWindow conf={{id: 'text'}} focus={(ele) => this.setState({focus: ele})}/>
+                <NewWindow
+                    conf={{id: 'textBox',
+                        focus: this.state.focus,
+                        mouse:this.state.mouse}}
+                    focus={(ele) => this.setState({focus: ele})}
+                    windowState={state=>this.windowState(state)}
+                />
+                <NewWindow
+                    id={ 'styleBox'}
+                    status={{
+                        focus: this.state.focus,
+                        mouse:this.state.mouse}}
+                    focus={(ele) => this.setState({focus: ele})}
+                    windowState={state=>this.windowState(state)}
+                />
             </div>
         );
     }
-}
+}*/
 
 class App extends Component {
     render() {
+        let  p =new Point2D([1,2])
+        console.log('new',p)
+        p.add([10,20])
+        console.log('add',p)
+        p.minus([1,2])
+        console.log('minus',p)
+        let p2 = Point2D.new([700,900]);
+        console.log(Point2D.minus(p,p2))
         return (
             <>
-                <Windows/>
+                {/*<Windows/>*/}
             </>
         );
     }
