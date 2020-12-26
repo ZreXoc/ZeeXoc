@@ -2,7 +2,7 @@ import React, {Component} from 'react';/*
 import {Container, Header, Body, Footer} from './Lyrw/Lyrw'
 import {Offset} from './Lyrw/Lyrw'*/
 import './Stylesheet/basic.css';
-import {Point2D} from "./Lyros";
+import {Point2D,Interval2D} from "./Lyros";
 
 /*class NewWindow extends Component {
     shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -153,14 +153,12 @@ class Windows extends Component {
 
 class App extends Component {
     render() {
-        let  p =new Point2D([1,2])
-        console.log('new',p)
-        p.add([10,20])
-        console.log('add',p)
-        p.minus([1,2])
-        console.log('minus',p)
-        let p2 = Point2D.new([700,900]);
-        console.log(Point2D.minus(p,p2))
+        let p =new Point2D([1,2])
+        let p2 = Point2D.new([4,6]);
+        console.log(p.toString())
+        let ii = new Interval2D(p,p2)
+        console.log(ii)
+        window.ii = ii
         return (
             <>
                 {/*<Windows/>*/}
