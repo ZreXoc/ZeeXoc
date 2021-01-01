@@ -1,10 +1,10 @@
-import React, {Component} from 'react';/*
-import {Container, Header, Body, Footer} from './Lyrw/Lyrw'
-import {Offset} from './Lyrw/Lyrw'*/
+import React, {Component} from 'react';
+/*import {Offset} from './Lyrw/Lyrw'*/
 import './Stylesheet/basic.css';
-import {Point2D,Interval2D} from "./Lyros";
+import {Point2D,Interval2D,Os} from "./Lyros";
 
-/*class NewWindow extends Component {
+/*
+class NewWindow extends Component {
     shouldComponentUpdate(nextProps, nextState, nextContext) {
         console.log(nextProps)
         if (nextProps.conf.focus!==this.props.conf.id) return false;
@@ -149,16 +149,12 @@ class Windows extends Component {
             </div>
         );
     }
-}*/
+}
+*/
 
 class App extends Component {
     render() {
-        let p =new Point2D([1,2])
-        let p2 = Point2D.new([4,6]);
-        console.log(p.toString())
-        let ii = new Interval2D(p,p2)
-        console.log(ii)
-        window.ii = ii
+        debug();
         return (
             <>
                 {/*<Windows/>*/}
@@ -166,6 +162,16 @@ class App extends Component {
         );
     }
 }
-
+function debug() {
+    let o = new Os;
+    let ml =o.setMouseListener('',{
+        a:['1','2','3','4'],
+        b:['1','2','3','4'],
+    })
+    ml.deleteEvent({
+        a:['1'],
+        b:['2']
+    })
+}
 
 export default App;

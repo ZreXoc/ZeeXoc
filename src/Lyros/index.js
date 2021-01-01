@@ -1,7 +1,5 @@
 /**
- * @typedef {(Point2D|{x: (Number|null), y: (Number|null)})} Point
- * @property {Number} x
- * @property {Number} y
+ * @typedef {(Point2D|{x: (Number|null), y: (Number|null)}|Number[])} Point
  */
 
 export class Point2D {
@@ -27,65 +25,66 @@ export class Point2D {
     }
 
     /**
-     * @param {Point|Number[]} point
-     * @return {boolean|Point2D} - is coordinate changed
+     * @param {Point} point
+     * @return {Point2D} - is coordinate changed
      */
-    add(point) {
-        let {x, y} = Point2D.pure(point);
-        if (x === 0 && y === 0) return false
-        this.x += x || 0;
-        this.y += y || 0;
+    add(...points) {
+        points.forEach(point => {
+            let {x, y} = Point2D.pure(point);
+            this.x += x || 0;
+            this.y += y || 0;
+        })
         return this;
     }
 
     /**
-     * @param {Point|Number[]} point
-     * @return {boolean|Point2D} - is coordinate changed
+     * @param {Point} point
+     * @return {Point2D}
      */
     minus(point) {
         let {x, y} = Point2D.pure(point);
-        if (x === 0 && y === 0) return false
         this.x -= x || 0;
         this.y -= y || 0;
         return this;
     }
 
     /**
-     * @param {Point|Number[]|null} [point=[0,0]]
+     * @param {Point|null} [point=[0,0]]
      * @param {Number} [e=3] - 精确度
      * @return {string} - distance
      */
-    distTo(point = {x: 0, y: 0}, e = 3) {
+    distTo(point = [0, 0], e = 3) {
         let {x, y} = Point2D.minus(Point2D.pure(this), Point2D.pure(point));
         return Math.sqrt(x * x + y * y).toFixed(e);
     }
 
     /**
-     * @param {Point|Number[]|null} point
+     * @param {Point|null} point
      */
     set(point) {
         let {x, y} = Point2D.pure(point);
         if (x) this.x = x;
         if (y) this.y = y;
+        return this;
     }
 
-    toString(){
-        return `(${this.x},${this.y})`
+    toString() {
+        return `(${this.x},${this.y})`;
     }
 
     /**
-     * @param {Point|Number[]} points
+     * @param {Point} points
      * @return {Point2D}
      */
     static sum(...points) {
         let result = new Point2D();
-        points.forEach(value => result.add(value))
+        result.add(...points);
         return result;
     }
 
     /**
-     * @param {Point|Number[]} leftPoint
-     * @param {Point|Number[]} rightPoint
+     * @param {Point} leftPoint
+     * @param {Point} rightPoint
      * @return {Point2D} - distance
      */
     static minus(leftPoint, rightPoint) {
@@ -93,12 +92,12 @@ export class Point2D {
     }
 
     /**
-     * @param {Point|Number[]} leftPoint
-     * @param {Point|Number[]} [rightPoint=[0,0]]
+     * @param {Point} leftPoint
+     * @param {Point} [rightPoint=[0,0]]
      * @param {Number} [e=3] - 精确度
      * @return {string} - distance
      */
-    static dist(leftPoint, rightPoint = [0, 0], e = 3) {
+    static distance(leftPoint, rightPoint = [0, 0], e = 3) {
         let {x, y} = Point2D.minus(Point2D.pure(leftPoint), Point2D.pure(rightPoint));
         return Math.sqrt(x * x + y * y).toFixed(e);
     }
@@ -110,10 +109,10 @@ export class Point2D {
     static new = (point = null) => new Point2D(point);
 
     /**
-     * @param {Point|Number[]|null} [point = {x: null, y: null}]
+     * @param {Point|null} [point = [0,0]]
      * @returns {{x: (Number|null), y: (Number|null)}}
      */
-    static pure(point) {
+    static pure(point = [0, 0]) {
         let p = {x: point.x || point[0] || null, y: point.y || point[1] || null};
 
         if (typeof p.x != 'number') p.x = null
@@ -122,7 +121,7 @@ export class Point2D {
     }
 
     /**
-     * @param {Point|Number[]|null} [point = null]
+     * @param {Point|null} [point = null]
      */
     constructor(point = null) {
         this.set(point)
@@ -130,14 +129,19 @@ export class Point2D {
 }
 
 export class Interval2D {
-    #_lr;
+    /**
+     * @type Point2D
+     */
     #_ul;
+    #_lr;
 
     get ul() {
         return this.#_ul;
     }
 
-    /** @param {Point|Number[]|null} point */
+    /**
+     * @param point {Point}
+     */
     set ul(point) {
         this.#_ul.set(point);
     }
@@ -146,28 +150,39 @@ export class Interval2D {
         return this.#_lr;
     }
 
-    /** @param {Point|Number[]|null} point */
+    /**
+     * @param point
+     */
     set lr(point) {
         this.#_lr.set(point);
     }
 
-    /** @param {Point|Number[]} points*/
+    /**
+     * @param {Point} points
+     * @description 平移: ul.add(...point);lr.add(...point)
+     * @return {Interval2D}
+     */
     translate(...points) {
         this.ul.add(...points)
+        this.lr.add(...points)
+        return this;
     }
 
     /**
-     * @param {Point} ul - upper left point
-     * @param {Point} lr - lower right point
+     *
+     * @param ul {Point}
+     * @param lr {Point}
+     * @return {Interval2D}
      */
     set(ul, lr) {
         this.ul = ul;
         this.lr = lr;
+        return this;
     }
 
-    toString(){
-        return(
-        `${this.ul.toString()},(${this.lr.x},${this.ul.x})\n(${this.ul.x},${this.lr.x}),${this.lr.toString()}`);
+    toString() {
+        return (
+            `${this.ul.toString()} (${this.lr.x},${this.ul.y}) \n(${this.ul.x},${this.lr.y}) ${this.lr.toString()}`);
     }
 
     constructor(ul, lr) {
@@ -177,75 +192,91 @@ export class Interval2D {
     }
 }
 
-class Offset {
-    /**
-     * @property {Number} X
-     * @property {Number} Y
-     */
-    _e = {}
-    get e() {
-        return this._e
+class MouseListener {
+    eventNames = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
+    #_event = {
+        a:[1,2],
+        b:[2,22]
+    };
+
+    /*resetEvent(events) {
+        this.#_event = {
+            mouseDown: [this.mouseDown, ...events.mouseDown],
+            mouseMove: [this.mouseMove, ...events.mouseMove],
+            mouseUp: [this.mouseUp, ...events.mouseUp],
+            mouseEnter: [this.mouseEnter, ...events.mouseEnter],
+            mouseLeave: [this.mouseLeave, ...events.mouseLeave]
+        }
+    }*/
+    appendEvent(event) {
+        /*for (let e in event) {
+            if (!event.hasOwnProperty(e)) continue;
+            if (!this.eventNames.includes(e)) continue;
+
+            console.log(e, event[e])
+        }*/
     }
 
-    set e(offset) {
-        this._e = Offset.pure(offset);
+    deleteEvent(deletedEvents) {
+        /*
+            events->
+                E:eventArray{Array}->
+                    e{Function}
+
+         */
+        console.log(1,this.#_event)
+        for (let dE in deletedEvents) {
+            if (!deletedEvents.hasOwnProperty(dE)) continue;
+            if (!this.#_event[dE]) continue//不包含deletedEvents中的event则continue
+
+            let oldEventArray = this.#_event[dE]
+            let deletedEventArray = deletedEvents[dE]
+            let tt = this.#_event;
+            //遍历原event中event数组,相等则删去;TODO
+            oldEventArray.forEach((oE,index) => {
+                if (deletedEventArray.every((dE)=>dE===oE)) {
+                    console.log(index,...this.#_event[dE][index])
+                    console.log(tt)
+                    debugger;
+                    this.#_event[dE].splice(index)
+                    console.log(index,...this.#_event[dE])
+                }
+            })
+        }
+        console.log(2,this.#_event)
     }
 
-    static pure(offset) {
-        if (!offset) return {X: null, Y: null};
-        if (offset.e) return {X: offset.e.X, Y: offset.e.Y};
-        if (offset instanceof Array) return {X: offset[0], Y: offset[1]};
-        return {X: offset.X, Y: offset.Y};
+    mouseDown() {
+
     }
 
-    static equal(...offsets) {
-        return offsets.every(offset => {
-            if (Offset.pure(offset).X === Offset.pure(offsets[0]).X
-                && Offset.pure(offset).Y === Offset.pure(offsets[0]).Y) return true;
-            return false;
-        })
+    mouseMove() {
     }
 
-    /**
-     * @param {Offset|Object} offsets
-     */
-    static add(...offsets) {
-        let offset = new Offset();
-        offset.add(...offsets);
-        return offset
+    mouseUp() {
     }
 
-    static minus(offsetA, offsetB) {
-        let offset = new Offset(offsetA);
-        offset.minus(offsetB);
-        return offset;
+    mouseEnter() {
     }
 
-
-    /**
-     * @param offsets
-     */
-    add(...offsets) {
-        let eX = 0, eY = 0
-        offsets.forEach((offset) => {
-            let o = Offset.pure(offset)
-            eX += o.X;
-            eY += o.Y;
-        })
-        this.e = [eX, eY]
+    mouseLeave() {
     }
 
-    /** @param {Offset|Object} offset */
-    minus(offset) {
-        let o = Offset.pure(offset);
-        let X, Y;
-        X = this.e.X - o.X;
-        Y = this.e.Y - o.Y;
-        this.e = {X, Y};
+    setListener() {
+
     }
 
-    /** @param {Offset|Object} offset */
-    constructor(offset = null) {
-        this.e = offset
+    constructor(element = document, event) {
+        this.#_event = event
+        this.appendEvent(event)
+    }
+}
+
+export class Os {
+    setMouseListener(element, events) {
+        return new MouseListener(element, events);
+    }
+
+    constructor(element) {
     }
 }
