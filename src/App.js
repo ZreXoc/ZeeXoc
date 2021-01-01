@@ -164,14 +164,12 @@ class App extends Component {
 }
 function debug() {
     let o = new Os;
-    let ml =o.setMouseListener('',{
-        a:['1','2','3','4'],
+    let ml =o.setMouseListener()
+    ml.appendEvent({
+        mouseDown:[()=>console.log(666)],
         b:['1','2','3','4'],
-    })
-    ml.deleteEvent({
-        a:['1'],
-        b:['2']
-    })
+    });
+    console.log(window.eve = ml.getEvent())
 }
 
 export default App;

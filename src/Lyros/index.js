@@ -192,12 +192,16 @@ export class Interval2D {
     }
 }
 
-class MouseListener {
-    eventNames = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
+export class MouseListener {
+    static eventNames = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
+
     #_event = {
-        a:[1,2],
-        b:[2,22]
-    };
+        mouseDown: [this.mouseDown],
+        mouseMove: [this.mouseMove],
+        mouseUp: [this.mouseUp],
+        mouseEnter: [this.mouseEnter],
+        mouseLeave: [this.mouseLeave]
+    }
 
     /*resetEvent(events) {
         this.#_event = {
@@ -208,42 +212,60 @@ class MouseListener {
             mouseLeave: [this.mouseLeave, ...events.mouseLeave]
         }
     }*/
-    appendEvent(event) {
-        /*for (let e in event) {
-            if (!event.hasOwnProperty(e)) continue;
-            if (!this.eventNames.includes(e)) continue;
 
-            console.log(e, event[e])
-        }*/
+    //仅供debug用
+    getEvent() {
+        return this.#_event;
     }
 
-    deleteEvent(deletedEvents) {
-        /*
+    appendEvent(event) {
+        event = MouseListener.pureEvent(event)
+        MouseListener.eventNames.forEach(eventName => {
+            console.log(event[eventName])
+            this.#_event[eventName] = [
+                ...this.#_event[eventName], ...event[eventName] || [function () {
+                }]
+            ];
+
+
+        });
+        /*return () => this.deleteEvent(event)*/
+    }
+
+    //废弃中。地址拷贝导致deletedEvents同时被修改，只有部分内容被删除。
+    /*deleteEvent(deletedEvents) {
+        /!*
             events->
                 E:eventArray{Array}->
                     e{Function}
-
-         */
-        console.log(1,this.#_event)
+         *!/
+        deletedEvents = MouseListener.pureEvent(deletedEvents)
+        console.log(2,{...deletedEvents})
         for (let dE in deletedEvents) {
             if (!deletedEvents.hasOwnProperty(dE)) continue;
-            if (!this.#_event[dE]) continue//不包含deletedEvents中的event则continue
+            if (!this.#_event[dE]) continue;
 
             let oldEventArray = this.#_event[dE]
             let deletedEventArray = deletedEvents[dE]
-            let tt = this.#_event;
-            //遍历原event中event数组,相等则删去;TODO
-            oldEventArray.forEach((oE,index) => {
-                if (deletedEventArray.every((dE)=>dE===oE)) {
-                    console.log(index,...this.#_event[dE][index])
-                    console.log(tt)
-                    debugger;
-                    this.#_event[dE].splice(index)
-                    console.log(index,...this.#_event[dE])
+            //遍历原event中event数组,相等则删去;
+            oldEventArray.forEach((oE, index) => {
+                if (!deletedEventArray.every((dE) => dE !== oE)) {
+                    this.#_event[dE].splice(index, 1)
                 }
             })
         }
-        console.log(2,this.#_event)
+        console.log(this.#_event)
+    }*/
+
+    static pureEvent(event) {
+        let pureEvent = {};
+        for (let e in event) {
+            if (!event.hasOwnProperty(e)) continue;
+            if (!MouseListener.eventNames.every(eN => eN !== e)) {
+                Object.assign(pureEvent, {[e]: event[e]});
+            }
+        }
+        return pureEvent;
     }
 
     mouseDown() {
@@ -266,15 +288,14 @@ class MouseListener {
 
     }
 
-    constructor(element = document, event) {
-        this.#_event = event
-        this.appendEvent(event)
+    constructor(element = document) {
+        //TODO
     }
 }
 
 export class Os {
-    setMouseListener(element, events) {
-        return new MouseListener(element, events);
+    setMouseListener(element) {
+        return new MouseListener(element);
     }
 
     constructor(element) {
