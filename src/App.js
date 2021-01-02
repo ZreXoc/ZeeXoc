@@ -153,18 +153,25 @@ class Windows extends Component {
 */
 
 class App extends Component {
-    render() {
+    componentDidMount() {
         debug();
+    }
+
+    render() {
         return (
             <>
+                <p style={{backgroundColor:'red'}}>222</p>
+                <p style={{backgroundColor:'red'}}>222</p>
+                <p style={{backgroundColor:'red'}} id={'222'}>222</p>
+                <p style={{backgroundColor:'red'}}>222</p>
                 {/*<Windows/>*/}
             </>
         );
     }
 }
 function debug() {
-    let o = new Os;
-    let ml =o.setMouseListener()
+    let o = new Os();
+    let ml =o.setEventListener(document.getElementById('222'))
     ml.appendEvent({
         mouseDown:[()=>console.log(666)],
         b:['1','2','3','4'],

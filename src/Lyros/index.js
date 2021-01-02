@@ -49,6 +49,21 @@ export class Point2D {
     }
 
     /**
+     * @param {Point} points
+     * @return {Boolean}
+     */
+    equal(...points) {
+        let isEqual = true;
+        points.forEach((point,index)=>{
+            if (!isEqual||!points[index+1]) return
+            let p1 = Point2D.pure(points[index]),
+                p2 = Point2D.pure(points[index+1])
+            isEqual = (p1.x === p2.x && p1.y === p2.y);
+        })
+        return isEqual;
+    }
+
+    /**
      * @param {Point|null} [point=[0,0]]
      * @param {Number} [e=3] - 精确度
      * @return {string} - distance
@@ -63,8 +78,8 @@ export class Point2D {
      */
     set(point) {
         let {x, y} = Point2D.pure(point);
-        if (x) this.x = x;
-        if (y) this.y = y;
+        this.x = x;
+        this.y = y;
         return this;
     }
 
@@ -92,6 +107,14 @@ export class Point2D {
     }
 
     /**
+     * @param {Point} points
+     * @return {Boolean}
+     */
+    static equal(...points) {
+        return Point2D.new(points[0]).equal(...points);
+    }
+
+    /**
      * @param {Point} leftPoint
      * @param {Point} [rightPoint=[0,0]]
      * @param {Number} [e=3] - 精确度
@@ -112,11 +135,12 @@ export class Point2D {
      * @param {Point|null} [point = [0,0]]
      * @returns {{x: (Number|null), y: (Number|null)}}
      */
-    static pure(point = [0, 0]) {
-        let p = {x: point.x || point[0] || null, y: point.y || point[1] || null};
+    static pure(point ) {
+        point = point||[0, 0];
+        let p = {x: point.x || point[0] || 0, y: point.y || point[1] || 0};
 
-        if (typeof p.x != 'number') p.x = null
-        if (typeof p.y != 'number') p.y = null
+        if (typeof p.x != 'number') p.x = 0
+        if (typeof p.y != 'number') p.y = 0
         return p;
     }
 
@@ -192,26 +216,33 @@ export class Interval2D {
     }
 }
 
-export class MouseListener {
-    static eventNames = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
+const ORIGINEVENT = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
+const EXTENDEVENT = [...ORIGINEVENT, 'mouseStill', 'dragging'];
+
+export class EventListener {
+    element;
+    /**
+     * @description element`s state:'focused'|'na'
+     * @type {string}
+     */
+    state = '';
+    currentOffset = new Point2D();
+    initialOffset = new Point2D();
 
     #_event = {
-        mouseDown: [this.mouseDown],
-        mouseMove: [this.mouseMove],
-        mouseUp: [this.mouseUp],
-        mouseEnter: [this.mouseEnter],
-        mouseLeave: [this.mouseLeave]
+        mouseDown: [],
+        mouseMove: [],
+        mouseUp: [],
+        mouseEnter: [],
+        mouseLeave: [],
+        mouseStill: [],
+        dragging: [],
     }
 
-    /*resetEvent(events) {
-        this.#_event = {
-            mouseDown: [this.mouseDown, ...events.mouseDown],
-            mouseMove: [this.mouseMove, ...events.mouseMove],
-            mouseUp: [this.mouseUp, ...events.mouseUp],
-            mouseEnter: [this.mouseEnter, ...events.mouseEnter],
-            mouseLeave: [this.mouseLeave, ...events.mouseLeave]
-        }
-    }*/
+    resetEvent(events) {
+        this.#_event = {};
+        this.appendEvent(events);
+    }
 
     //仅供debug用
     getEvent() {
@@ -219,27 +250,35 @@ export class MouseListener {
     }
 
     appendEvent(event) {
-        event = MouseListener.pureEvent(event)
-        MouseListener.eventNames.forEach(eventName => {
-            console.log(event[eventName])
+        event = EventListener.pureEvent(event)
+        EXTENDEVENT.forEach(eventName => {
             this.#_event[eventName] = [
-                ...this.#_event[eventName], ...event[eventName] || [function () {
-                }]
+                ...this.#_event[eventName], ...event[eventName] || []
             ];
-
-
         });
         /*return () => this.deleteEvent(event)*/
     }
 
     //废弃中。地址拷贝导致deletedEvents同时被修改，只有部分内容被删除。
+
+    static pureEvent(event) {
+        let pureEvent = {};
+        for (let e in event) {
+            if (!event.hasOwnProperty(e)) continue;
+            if (!EXTENDEVENT.every(eN => eN !== e)) {
+                Object.assign(pureEvent, {[e]: event[e]});
+            }
+        }
+        return pureEvent;
+    }
+
     /*deleteEvent(deletedEvents) {
         /!*
             events->
                 E:eventArray{Array}->
                     e{Function}
          *!/
-        deletedEvents = MouseListener.pureEvent(deletedEvents)
+        deletedEvents = EventListener.pureEvent(deletedEvents)
         console.log(2,{...deletedEvents})
         for (let dE in deletedEvents) {
             if (!deletedEvents.hasOwnProperty(dE)) continue;
@@ -257,45 +296,74 @@ export class MouseListener {
         console.log(this.#_event)
     }*/
 
-    static pureEvent(event) {
-        let pureEvent = {};
-        for (let e in event) {
-            if (!event.hasOwnProperty(e)) continue;
-            if (!MouseListener.eventNames.every(eN => eN !== e)) {
-                Object.assign(pureEvent, {[e]: event[e]});
-            }
-        }
-        return pureEvent;
+    mouseDown(e) {
+        let boundingClientRect = this.element.getBoundingClientRect();
+        this.initialOffset.set([boundingClientRect.x, boundingClientRect.y]);
     }
 
-    mouseDown() {
+    mouseMove(e) {//TODO
+        let mouseState = (['dragging', 'down'].find(value => value === mouseEvent.state)) ? 'dragging' : 'moving';
+
+        this.currentOffset.e = [e.clientX, e.clientY];
+        this.state = mouseState;
+        if (mouseState === 'dragging') this.dragging(e);
+    }
+
+    mouseUp(e) {
+    }
+
+    mouseEnter(e) {
+    }
+
+    mouseLeave(e) {
+    }
+
+    mouseStill(e) {
 
     }
 
-    mouseMove() {
+    dragging(e) {
+
     }
 
-    mouseUp() {
-    }
+    setListener(element) {
+        this.element = element;
+        ORIGINEVENT.forEach((eventName, index) =>
+            this.element.addEventListener(eventName.toLocaleLowerCase(), e => this[eventName](e))
+        );
+        //mouseStill
+        setInterval(() => {
+            if (['dragging', 'down', 'leave', 'still'].find(value => value === this.state)) return;
 
-    mouseEnter() {
-    }
-
-    mouseLeave() {
-    }
-
-    setListener() {
-
+            let currentOffset = mouseEvent.currentOffset;
+            setTimeout(() => {
+                if (Point2D.equal(currentOffset, mouseEvent.currentOffset)) {
+                    this.state = 'still'
+                }
+            }, 100)
+        }, 200)
     }
 
     constructor(element = document) {
+        this.setListener(element);
         //TODO
     }
 }
 
+let mouseEvent = new class MouseEventListener extends EventListener{
+    mouseDown(e) {
+        this.initialOffset.set([e.clientX, e.clientY]);
+        this.state = 'mouseDown';
+    }
+
+    constructor() {
+        super(document);
+    }
+}()
+
 export class Os {
-    setMouseListener(element) {
-        return new MouseListener(element);
+    setEventListener(element) {
+        return new EventListener(element);
     }
 
     constructor(element) {
