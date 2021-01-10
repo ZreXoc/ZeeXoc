@@ -1,3 +1,5 @@
+import React, {Component} from "react";
+
 /**
  * @typedef {(Point2D|{x: (Number|null), y: (Number|null)}|Number[])} Point
  */
@@ -54,10 +56,10 @@ export class Point2D {
      */
     equal(...points) {
         let isEqual = true;
-        points.forEach((point,index)=>{
-            if (!isEqual||!points[index+1]) return
+        points.forEach((point, index) => {
+            if (!isEqual || !points[index + 1]) return
             let p1 = Point2D.pure(points[index]),
-                p2 = Point2D.pure(points[index+1])
+                p2 = Point2D.pure(points[index + 1])
             isEqual = (p1.x === p2.x && p1.y === p2.y);
         })
         return isEqual;
@@ -135,12 +137,14 @@ export class Point2D {
      * @param {Point|null} [point = [0,0]]
      * @returns {{x: (Number|null), y: (Number|null)}}
      */
-    static pure(point ) {
-        point = point||[0, 0];
-        let p = {x: point.x || point[0] || 0, y: point.y || point[1] || 0};
+    static pure(point) {
+        point = point || [null, null];
+        let p = {x: null, y: null};
+        if (point.x === 0 || point.x || point[0]) p.x = point.x;
+        if (point.y === 0 || point.y || point[1]) p.y = point.y;
 
-        if (typeof p.x != 'number') p.x = 0
-        if (typeof p.y != 'number') p.y = 0
+        if (typeof p.x != 'number' || isNaN(p.x)) p.x = null;
+        if (typeof p.y != 'number' || isNaN(p.x)) p.y = null;
         return p;
     }
 
@@ -194,14 +198,24 @@ export class Interval2D {
 
     /**
      *
-     * @param ul {Point}
-     * @param lr {Point}
+     * @param interval2D.ul {Point}
+     * @param interval2D.lr {Point}
      * @return {Interval2D}
      */
-    set(ul, lr) {
-        this.ul = ul;
-        this.lr = lr;
+    set(interval2D) {
+        this.ul = interval2D.ul;
+        this.lr = interval2D.lr;
         return this;
+    }
+
+    toOffset() {
+        let {ul, lr} = Interval2D.pure(this)
+        return {
+            left: ul.x,
+            top: ul.y,
+            width: lr.x - ul.x,
+            height: lr.y - ul.y,
+        }
     }
 
     toString() {
@@ -209,15 +223,132 @@ export class Interval2D {
             `${this.ul.toString()} (${this.lr.x},${this.ul.y}) \n(${this.ul.x},${this.lr.y}) ${this.lr.toString()}`);
     }
 
-    constructor(ul, lr) {
+    static toInterval2D(element) {
+        let clientRect = element.getBoundingClientRect()
+        return new Interval2D({
+            ul: {
+                x: clientRect.left,
+                y: clientRect.top,
+            },
+            lr: {
+                x: clientRect.right,
+                y: clientRect.bottom,
+            }
+        })
+    }
+
+    static pure(interval) {
+        return {
+            ul: Point2D.pure(interval.ul),
+            lr: Point2D.pure(interval.lr)
+        }
+    }
+
+    constructor(interval2D = [null, null]) {
+        let {ul, lr} = interval2D;
         this.#_ul = new Point2D(ul);
         this.#_lr = new Point2D(lr);
-        this.set(ul, lr);
+        this.set({ul, lr});
     }
 }
 
 const ORIGINEVENT = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
 const EXTENDEVENT = [...ORIGINEVENT, 'mouseStill', 'dragging'];
+const DEFAULT_CONFIG = {
+    title:'window',
+    events:{
+        mouseDown:[],
+        mouseMove:[],
+        mouseUp:[],
+        mouseEnter:[],
+        mouseLeave:[],
+        mouseStill:[],
+        dragging:[]
+    },
+    drag: {
+        enable: true,
+        limit: 'parent',
+    }
+}
+
+export function Window(config) {
+    return WrappedComponent => class extends Component {
+        //DOM element
+        item;
+
+        _config = {
+            ...Object.assign({}, config, DEFAULT_CONFIG),
+        }
+
+        get config() {
+            return this._config;
+        }
+
+        set config(newConf) {
+            return Object.assign(this._config, newConf);
+        }
+
+        _interval;
+
+        get interval() {
+            return this._interval;
+        }
+
+        set interval(newInterval) {
+            this._interval.set(newInterval);
+            this.setState({
+                style: {
+                    ...this._interval.toOffset()
+                }
+            })
+            return this._interval;
+        }
+
+        constructor(props) {
+            super(props);
+            this.state = {
+                title: '',
+                style: {}
+            }
+        }
+
+        componentDidMount() {
+            //在此声明防止interval提前与offset绑定
+            this._interval = new Interval2D();
+            this.interval = Interval2D.toInterval2D(this.item)
+        }
+
+        render() {
+            return (
+                <div
+                    className='window-container'
+                    style={{
+                        ...this.state.style
+                    }}
+                    ref={ref => this.item = ref}>
+                    <Header title={this.state.title}/>
+                    <WrappedComponent
+                        config={newConf => newConf ? this.config = newConf : this.config}
+                        debug={{
+                            interval: newInterval => newInterval ? this.interval = newInterval : this.interval,
+                            title: nT => nT?this.setState({title:nT}):this.state.title
+                        }}
+                    />
+                </div>
+            )
+        }
+
+    }
+}
+
+function Header(props) {
+    return (<div
+        style={{...props.style}}
+        w-type='header'>
+        <span>{props.title}</span>
+        {props.children}
+    </div>)
+}
 
 export class EventListener {
     element;
@@ -350,7 +481,7 @@ export class EventListener {
     }
 }
 
-let mouseEvent = new class MouseEventListener extends EventListener{
+let mouseEvent = new class MouseEventListener extends EventListener {
     mouseDown(e) {
         this.initialOffset.set([e.clientX, e.clientY]);
         this.state = 'mouseDown';

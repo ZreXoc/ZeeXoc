@@ -9,7 +9,7 @@ body {
     background-color: var(--col-3);
 }
 
-[w-type="container"] {
+.window-container {
     display: flex;
     flex-direction: column;
     position: absolute;
@@ -18,32 +18,32 @@ body {
     border: var(--col-2) 1px solid;
 }
 
-[w-type="container"]>[w-type="header"] {
+.window-container>[w-type="header"] {
     background-color: var(--col-2);
     color: var(--col-1);
     user-select: none;
 }
-[w-type="container"]>[w-type="body"] {
+.window-container>[w-type="body"] {
     flex-grow: 1;
     margin: 0.5em;
     background-color: var(--col-1);
     color: var(--col-2);
 }
-[w-type="container"]>[w-type="footer"] {
+.window-container>[w-type="footer"] {
     bottom: 0;
     background-color: var(--col-2);
     color: var(--col-1);
     user-select: none;
 }
 
-[w-type="container"]>[w-type="header"]>span {
+.window-container>[w-type="header"]>span {
     cursor: default;
 }
-[w-type="container"]>[w-type="body"]>iframe {
+.window-container>[w-type="body"]>iframe {
     height: 100%;
     width: 100%;
 }
-[w-type="container"]>[w-type="footer"]>span {
+.window-container>[w-type="footer"]>span {
     cursor: default;
 }
 

@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 /*import {Offset} from './Lyrw/Lyrw'*/
 import './Stylesheet/basic.css';
-import {Point2D,Interval2D,Os} from "./Lyros";
+import {Point2D,Interval2D,Window,Os} from "./Lyros";
 
 /*
 class NewWindow extends Component {
@@ -151,19 +151,19 @@ class Windows extends Component {
     }
 }
 */
-
 class App extends Component {
     componentDidMount() {
-        debug();
+        //debug();
     }
 
     render() {
+        let Text = React.lazy(() => import('./text/index.js'));
+
         return (
             <>
-                <p style={{backgroundColor:'red'}}>222</p>
-                <p style={{backgroundColor:'red'}}>222</p>
-                <p style={{backgroundColor:'red'}} id={'222'}>222</p>
-                <p style={{backgroundColor:'red'}}>222</p>
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <Text />
+                </React.Suspense>
                 {/*<Windows/>*/}
             </>
         );
