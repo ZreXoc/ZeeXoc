@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 /*import {Offset} from './Lyrw/Lyrw'*/
 import './Stylesheet/basic.css';
-import {Point2D,Interval2D,Window,Os} from "./Lyros";
+import {Os} from "./Lyros";
 
 /*
 class NewWindow extends Component {
@@ -157,26 +157,15 @@ class App extends Component {
     }
 
     render() {
-        let Text = React.lazy(() => import('./text/index.js'));
-
+        let Text = Os.load(()=>require('./text'))
         return (
             <>
-                <React.Suspense fallback={<div>loading...</div>}>
-                    <Text />
-                </React.Suspense>
-                {/*<Windows/>*/}
+                <Text/>
             </>
         );
     }
 }
 function debug() {
-    let o = new Os();
-    let ml =o.setEventListener(document.getElementById('222'))
-    ml.appendEvent({
-        mouseDown:[()=>console.log(666)],
-        b:['1','2','3','4'],
-    });
-    console.log(window.eve = ml.getEvent())
 }
 
 export default App;

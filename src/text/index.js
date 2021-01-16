@@ -4,7 +4,6 @@ import {Window} from "../Lyros";
 const config = {
     name: 'text'
 }
-
 @Window(config)
 class TextBox extends Component {
     constructor(props) {

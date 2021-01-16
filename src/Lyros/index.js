@@ -277,7 +277,7 @@ export function Window(config) {
         item;
 
         _config = {
-            ...Object.assign({}, config, DEFAULT_CONFIG),
+            ...Object.assign({}, DEFAULT_CONFIG, config),
         }
 
         get config() {
@@ -307,7 +307,7 @@ export function Window(config) {
         constructor(props) {
             super(props);
             this.state = {
-                title: '',
+                title: this.config.title,
                 style: {}
             }
         }
@@ -327,17 +327,19 @@ export function Window(config) {
                     }}
                     ref={ref => this.item = ref}>
                     <Header title={this.state.title}/>
-                    <WrappedComponent
-                        config={newConf => newConf ? this.config = newConf : this.config}
-                        debug={{
-                            interval: newInterval => newInterval ? this.interval = newInterval : this.interval,
-                            title: nT => nT?this.setState({title:nT}):this.state.title
-                        }}
-                    />
+                    <Body>
+                        <WrappedComponent
+                            w-type='body'
+                            config={newConf => newConf ? this.config = newConf : this.config}
+                            debug={{
+                                interval: newInterval => newInterval ? this.interval = newInterval : this.interval,
+                                title: nT => nT?this.setState({title:nT}):this.state.title
+                            }}
+                        />
+                    </Body>
                 </div>
             )
         }
-
     }
 }
 
@@ -345,6 +347,23 @@ function Header(props) {
     return (<div
         style={{...props.style}}
         w-type='header'>
+        <span>{props.title}</span>
+        {props.children}
+    </div>)
+}
+function Body(props) {
+    return(
+        <div
+            style={{...props.style}}
+            w-type='body'>
+            {props.children}
+        </div>
+    )
+}
+function Footer(props) {
+    return (<div
+        style={{...props.style}}
+        w-type='footer'>
         <span>{props.title}</span>
         {props.children}
     </div>)
@@ -492,7 +511,12 @@ let mouseEvent = new class MouseEventListener extends EventListener {
     }
 }()
 
+function load() {
+
+}
 export class Os {
+    static load=require=>require().default;
+
     setEventListener(element) {
         return new EventListener(element);
     }
