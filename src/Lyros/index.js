@@ -1,4 +1,6 @@
 import React, {Component} from "react";
+import ReactDOM from "react-dom";
+import App from "../App";
 
 /**
  * @typedef {(Point2D|{x: (Number|null), y: (Number|null)}|Number[])} Point
@@ -15,6 +17,8 @@ export class Point2D {
     /**@param {Number}val*/
     set x(val) {
         if (typeof val == "number") this.#_x = val
+        this.onChange(this);
+        return this.#_x;
     }
 
     get y() {
@@ -24,11 +28,16 @@ export class Point2D {
     /**@param {Number}val*/
     set y(val) {
         if (typeof val == "number") this.#_y = val
+        this.onChange(this);
+        return this.#_y;
     }
 
+    onChange = () => {
+    };
+
     /**
-     * @param {Point} point
-     * @return {Point2D} - is coordinate changed
+     * @return {Point} - is coordinate changed
+     * @param points
      */
     add(...points) {
         points.forEach(point => {
@@ -45,8 +54,8 @@ export class Point2D {
      */
     minus(point) {
         let {x, y} = Point2D.pure(point);
-        this.x -= x || 0;
-        this.y -= y || 0;
+        this.x -= x;
+        this.y -= y;
         return this;
     }
 
@@ -150,9 +159,12 @@ export class Point2D {
 
     /**
      * @param {Point|null} [point = null]
+     * @param onChange
      */
-    constructor(point = null) {
-        this.set(point)
+    constructor(point = null, onChange = () => {
+    }) {
+        this.set(point);
+        this.onChange = onChange;
     }
 }
 
@@ -172,6 +184,7 @@ export class Interval2D {
      */
     set ul(point) {
         this.#_ul.set(point);
+        this.onChange(this);
     }
 
     get lr() {
@@ -183,16 +196,30 @@ export class Interval2D {
      */
     set lr(point) {
         this.#_lr.set(point);
+        this.onChange(this);
     }
+
+    onChange() {
+    };
 
     /**
      * @param {Point} points
      * @description 平移: ul.add(...point);lr.add(...point)
      * @return {Interval2D}
      */
-    translate(...points) {
+    translate(points) {
+        let pUl = Point2D.pure(this.ul)
+        let pLr = Point2D.pure(this.lr)
+        this.ul.set(points)
+        this.lr.set(Point2D.minus(pLr, pUl).add(points))
+        this.onChange(this)
+        return this;
+    }
+
+    add(...points) {
         this.ul.add(...points)
         this.lr.add(...points)
+        this.onChange(this)
         return this;
     }
 
@@ -244,64 +271,62 @@ export class Interval2D {
         }
     }
 
-    constructor(interval2D = [null, null]) {
-        let {ul, lr} = interval2D;
+    constructor(interval2D, onChange = () => {
+    }) {
+        let {ul, lr} = interval2D || [null, null];
         this.#_ul = new Point2D(ul);
         this.#_lr = new Point2D(lr);
         this.set({ul, lr});
+        onChange(this)
+        this.onChange = onChange;
     }
 }
 
-const ORIGINEVENT = ['mouseDown', 'mouseMove', 'mouseUp', 'mouseEnter', 'mouseLeave'];
-const EXTENDEVENT = [...ORIGINEVENT, 'mouseStill', 'dragging'];
-const DEFAULT_CONFIG = {
-    title:'window',
-    events:{
-        mouseDown:[],
-        mouseMove:[],
-        mouseUp:[],
-        mouseEnter:[],
-        mouseLeave:[],
-        mouseStill:[],
-        dragging:[]
-    },
-    drag: {
-        enable: true,
-        limit: 'parent',
-    }
+const OFFSET_DEFAULT_CONFIG = {
+    bindPosition: true,
+    draggable: true
 }
 
-export function Window(config) {
-    return WrappedComponent => class extends Component {
+const WINDOW_DEFAULT_CONFIG = {
+    title: 'window',
+    draggable: true
+}
+
+export function Window(require) {
+    let config = require.config;
+    let WrappedComponent = require.Component;
+    return class extends Component {
         //DOM element
         item;
 
-        _config = {
-            ...Object.assign({}, DEFAULT_CONFIG, config),
+        config = {
+            ...Object.assign({}, WINDOW_DEFAULT_CONFIG, config),
         }
 
-        get config() {
-            return this._config;
+        #_interval;
+
+        interval(newInterval) {
+            if (!newInterval) return this.#_interval
+            this.#_interval.set(newInterval);
+            return this.#_interval;
         }
 
-        set config(newConf) {
-            return Object.assign(this._config, newConf);
-        }
+        offset;
 
-        _interval;
-
-        get interval() {
-            return this._interval;
-        }
-
-        set interval(newInterval) {
-            this._interval.set(newInterval);
-            this.setState({
-                style: {
-                    ...this._interval.toOffset()
-                }
+        setDrag() {
+            let pUl = Object.assign({}, {x: this.interval().ul.x, y: this.interval().ul.y});
+            new EventListener(this.item, 'mousedown', (pE, cE) => {
+                pUl = Object.assign({}, {x: this.interval().ul.x, y: this.interval().ul.y});
             })
-            return this._interval;
+            new EventListener(this.item, 'drag', (pE, cE) => {
+                this.interval().translate({
+                    x: pUl.x + cE.x - pE.x,
+                    y: pUl.y + cE.y - pE.y
+                })
+            })
+            new EventListener(this.item, 'mouseup', (pE, cE) => {
+                pUl = Object.assign({}, {x: this.interval().ul.x, y: this.interval().ul.y});
+            })
         }
 
         constructor(props) {
@@ -314,8 +339,19 @@ export function Window(config) {
 
         componentDidMount() {
             //在此声明防止interval提前与offset绑定
-            this._interval = new Interval2D();
-            this.interval = Interval2D.toInterval2D(this.item)
+            this.#_interval = new Interval2D(null, interval => {
+                this.setState({
+                    style: {
+                        ...interval.toOffset()
+                    }
+                })
+            });
+            this.interval(Interval2D.toInterval2D(this.item))
+            if (this.config.draggable) this.setDrag();
+        }
+
+        componentWillUnmount() {
+            alert('bye!')
         }
 
         render() {
@@ -326,21 +362,16 @@ export function Window(config) {
                         ...this.state.style
                     }}
                     ref={ref => this.item = ref}>
-                    <Header title={this.state.title}/>
+                    <Header title={this.state.title} delete={this.props.delete}/>
                     <Body>
-                        <WrappedComponent
-                            w-type='body'
-                            config={newConf => newConf ? this.config = newConf : this.config}
-                            debug={{
-                                interval: newInterval => newInterval ? this.interval = newInterval : this.interval,
-                                title: nT => nT?this.setState({title:nT}):this.state.title
-                            }}
-                        />
+                        <WrappedComponent/>
                     </Body>
+                    <Footer/>
                 </div>
             )
         }
     }
+
 }
 
 function Header(props) {
@@ -348,11 +379,13 @@ function Header(props) {
         style={{...props.style}}
         w-type='header'>
         <span>{props.title}</span>
-        {props.children}
+        <button onClick={props.delete}>×</button>{/*TODO*/}
+
     </div>)
 }
+
 function Body(props) {
-    return(
+    return (
         <div
             style={{...props.style}}
             w-type='body'>
@@ -360,6 +393,7 @@ function Body(props) {
         </div>
     )
 }
+
 function Footer(props) {
     return (<div
         style={{...props.style}}
@@ -369,158 +403,59 @@ function Footer(props) {
     </div>)
 }
 
-export class EventListener {
+class EventListener {
     element;
-    /**
-     * @description element`s state:'focused'|'na'
-     * @type {string}
-     */
-    state = '';
-    currentOffset = new Point2D();
-    initialOffset = new Point2D();
 
-    #_event = {
-        mouseDown: [],
-        mouseMove: [],
-        mouseUp: [],
-        mouseEnter: [],
-        mouseLeave: [],
-        mouseStill: [],
-        dragging: [],
+    previousEvent;
+
+    currentEvent;
+
+    setDrag(element, listener) {
+        let isMouseDown = false;
+        element.addEventListener('mousedown', e => {
+            this.previousEvent = e;
+            this.currentEvent = e;
+            isMouseDown = true;
+        })
+        document.addEventListener('mousemove', e => {
+            if (!isMouseDown) return
+            this.currentEvent = e;
+            listener(this.previousEvent, this.currentEvent)
+        })
+        document.addEventListener('mouseup', e => {
+            isMouseDown = false;
+        })
     }
 
-    resetEvent(events) {
-        this.#_event = {};
-        this.appendEvent(events);
-    }
-
-    //仅供debug用
-    getEvent() {
-        return this.#_event;
-    }
-
-    appendEvent(event) {
-        event = EventListener.pureEvent(event)
-        EXTENDEVENT.forEach(eventName => {
-            this.#_event[eventName] = [
-                ...this.#_event[eventName], ...event[eventName] || []
-            ];
-        });
-        /*return () => this.deleteEvent(event)*/
-    }
-
-    //废弃中。地址拷贝导致deletedEvents同时被修改，只有部分内容被删除。
-
-    static pureEvent(event) {
-        let pureEvent = {};
-        for (let e in event) {
-            if (!event.hasOwnProperty(e)) continue;
-            if (!EXTENDEVENT.every(eN => eN !== e)) {
-                Object.assign(pureEvent, {[e]: event[e]});
+    constructor(element, type, listener) {
+        this.element = element;
+        switch (type) {
+            case 'drag': {
+                this.setDrag(element, listener)
+                break;
+            }
+            default: {
+                element.addEventListener(type, listener)
             }
         }
-        return pureEvent;
-    }
 
-    /*deleteEvent(deletedEvents) {
-        /!*
-            events->
-                E:eventArray{Array}->
-                    e{Function}
-         *!/
-        deletedEvents = EventListener.pureEvent(deletedEvents)
-        console.log(2,{...deletedEvents})
-        for (let dE in deletedEvents) {
-            if (!deletedEvents.hasOwnProperty(dE)) continue;
-            if (!this.#_event[dE]) continue;
-
-            let oldEventArray = this.#_event[dE]
-            let deletedEventArray = deletedEvents[dE]
-            //遍历原event中event数组,相等则删去;
-            oldEventArray.forEach((oE, index) => {
-                if (!deletedEventArray.every((dE) => dE !== oE)) {
-                    this.#_event[dE].splice(index, 1)
-                }
-            })
-        }
-        console.log(this.#_event)
-    }*/
-
-    mouseDown(e) {
-        let boundingClientRect = this.element.getBoundingClientRect();
-        this.initialOffset.set([boundingClientRect.x, boundingClientRect.y]);
-    }
-
-    mouseMove(e) {//TODO
-        let mouseState = (['dragging', 'down'].find(value => value === mouseEvent.state)) ? 'dragging' : 'moving';
-
-        this.currentOffset.e = [e.clientX, e.clientY];
-        this.state = mouseState;
-        if (mouseState === 'dragging') this.dragging(e);
-    }
-
-    mouseUp(e) {
-    }
-
-    mouseEnter(e) {
-    }
-
-    mouseLeave(e) {
-    }
-
-    mouseStill(e) {
-
-    }
-
-    dragging(e) {
-
-    }
-
-    setListener(element) {
-        this.element = element;
-        ORIGINEVENT.forEach((eventName, index) =>
-            this.element.addEventListener(eventName.toLocaleLowerCase(), e => this[eventName](e))
-        );
-        //mouseStill
-        setInterval(() => {
-            if (['dragging', 'down', 'leave', 'still'].find(value => value === this.state)) return;
-
-            let currentOffset = mouseEvent.currentOffset;
-            setTimeout(() => {
-                if (Point2D.equal(currentOffset, mouseEvent.currentOffset)) {
-                    this.state = 'still'
-                }
-            }, 100)
-        }, 200)
-    }
-
-    constructor(element = document) {
-        this.setListener(element);
-        //TODO
     }
 }
 
-let mouseEvent = new class MouseEventListener extends EventListener {
-    mouseDown(e) {
-        this.initialOffset.set([e.clientX, e.clientY]);
-        this.state = 'mouseDown';
-    }
-
-    constructor() {
-        super(document);
-    }
-}()
-
-function load() {
-
+function load(src) {
+    let Win = Window(require('../' + src));
+    return <Win/>;
 }
+
 export class Os {
-    static load=require=>require().default;
+    element;
+    static load = load
 
-    setEventListener(element) {
-        return new EventListener(element);
+    static addEventListener(element, type, listener) {
+        return new EventListener(element, type, listener)
     }
 
     constructor(element) {
+        this.element = element;
     }
 }
