@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Window} from "../Lyros";
+import {Container} from "../Lyros";
 
 const config = {
     title: 'text',

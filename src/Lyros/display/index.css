@@ -1,0 +1,38 @@
+.app-window > [w-type="header"] {
+    background-color: var(--col-2);
+    color: var(--col-1);
+    user-select: none;
+}
+
+.app-window > [w-type="body"] {
+    flex-grow: 1;
+    margin: 0.5em;
+    background-color: var(--col-1);
+    color: var(--col-2);
+}
+
+.app-window > [w-type="footer"] {
+    bottom: 0;
+    background-color: var(--col-2);
+    color: var(--col-1);
+    user-select: none;
+}
+
+.app-window > [w-type="header"] > span {
+    user-select: none;
+    cursor: default;
+}
+
+.app-window > [w-type="body"] {
+    user-select: none;
+}
+
+.app-window > [w-type="body"] > iframe {
+    height: 100%;
+    width: 100%;
+}
+
+.app-window > [w-type="footer"] > span {
+    cursor: default;
+}
+
