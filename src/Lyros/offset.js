@@ -197,6 +197,7 @@ export class Interval2D {
 
     config = {
         limit: null,
+        bind: null,
         onChange: () => {
         }
     }
@@ -206,7 +207,6 @@ export class Interval2D {
         if (limit) {
             let ul = Point2D.minus(this.ul, limit.ul)
             let lr = Point2D.minus(limit.lr, this.lr)
-            console.log(limit.lr.toString(), '\n\n', this.lr.toString(), lr.toString())
             if (ul.x < 0) this.#_ul.x = limit.ul.x
             if (ul.y < 0) this.#_ul.y = limit.ul.y
             if (lr.x < 0) this.#_lr.x = limit.lr.x
@@ -235,11 +235,11 @@ export class Interval2D {
     translate(points) {
         let pUl = Point2D.pure(this.ul)
         let pLr = Point2D.pure(this.lr)
-        let size = Point2D.minus(pLr, pUl)
+        let size = Point2D.minus(pLr, pUl);
         let nUl =  Point2D.pure(points);
         let nLr =  Point2D.pure(Point2D.minus(pLr, pUl).add(points));
-        let limit = this.config.limit;
-        if (limit) {
+        if (this.config.limit) {
+            let limit =this.config.limit.tagName?Interval2D.toInterval2D(this.config.limit):this.config.limit;
             let dUl = Point2D.minus(nUl, limit.ul)
             let dLr = Point2D.minus(limit.lr, nLr)
             if (dUl.x < 0) {
@@ -247,12 +247,16 @@ export class Interval2D {
                 nLr.x = limit.ul.x+size.x;
             }
             if (dLr.x < 0) {
-                nUl.x = limit.ul.x-size.x;
-                nLr.x = pLr.x;
+                nUl.x = limit.lr.x-size.x;
+                nLr.x = limit.lr.x;
             }
-            if (dUl.y < 0 || dLr.y < 0) {
-                nUl.y = pUl.y;
-                nLr.y = pLr.y;
+            if (dUl.y < 0) {
+                nUl.y = limit.ul.y;
+                nLr.y = limit.ul.y+size.y;
+            }
+            if (dLr.y < 0) {
+                nUl.y = limit.lr.y-size.y;
+                nLr.y = limit.lr.y;
             }
         }
         this.#_ul.set(nUl)

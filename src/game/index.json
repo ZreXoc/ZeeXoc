@@ -1,0 +1,13 @@
+{
+  "conf": {
+    "id": "textBox"
+  },
+  "header": {
+    "img": {
+      "src": "/logo.svg"
+    },
+    "title": {
+
+    }
+  }
+}

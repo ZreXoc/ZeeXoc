@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {Interval2D} from "./offset";
-import {Header, Body, Footer} from "./display";
+import {Header, Body, Footer, Title, DeleteButton} from "./display";
 
 class EventListener {
     element;
@@ -55,6 +55,7 @@ function Window(require) {
 
         config = {
             ...Object.assign({}, WINDOW_DEFAULT_CONFIG, config),
+            url:this.props.url
         }
 
         #_interval;
@@ -67,17 +68,17 @@ function Window(require) {
 
         setDrag() {
             let pUl = Object.assign({}, {x: this.interval().ul.x, y: this.interval().ul.y});
-            new EventListener(this.ref, 'mousedown', (pE, cE) => {
+            let header = this.ref.querySelector('[w-type=\'header\']');
+            new EventListener(header, 'mousedown', (pE, cE) => {
                 pUl = Object.assign({}, {x: this.interval().ul.x, y: this.interval().ul.y});
             })
-            new EventListener(this.ref, 'drag', (pE, cE) => {
+            new EventListener(header, 'drag', (pE, cE) => {
                 this.interval().translate({
                     x: pUl.x + cE.x - pE.x,
                     y: pUl.y + cE.y - pE.y
                 })
-                console.log(this.interval().in(Interval2D.toInterval2D(document.getElementsByTagName('body')[0])))
             })
-            new EventListener(this.ref, 'mouseup', (pE, cE) => {
+            new EventListener(header, 'mouseup', (pE, cE) => {
                 pUl = Object.assign({}, {x: this.interval().ul.x, y: this.interval().ul.y});
             })
         }
@@ -93,17 +94,13 @@ function Window(require) {
         componentDidMount() {
             //在此声明防止interval提前与offset绑定
             this.#_interval = new Interval2D(null, {
-                limit:Interval2D.toInterval2D(document.getElementsByTagName('body')[0]),
+                limit: document.getElementsByTagName('body')[0],
                 onChange: interval => this.setState({style: {...interval.toOffset()}})
-
             });
             this.interval(Interval2D.toInterval2D(this.ref))
             if (this.config.draggable) this.setDrag();
         }
 
-        componentWillUnmount() {
-            alert('bye!')
-        }
 
         render() {
             return (
@@ -111,7 +108,10 @@ function Window(require) {
                     className='app-window'
                     style={this.state.style}
                     ref={ref => this.ref = ref}>
-                    <Header title={this.state.title}/>
+                    <Header>
+                        <Title>{this.state.title}</Title>
+                        <DeleteButton delete={()=>this.props.delete(this.config.url)}/>
+                    </Header>
                     <Body>
                         <WrappedComponent/>
                     </Body>
@@ -124,29 +124,40 @@ function Window(require) {
 }
 
 export class Container extends Component {
-    load(url, isForce = true) {
+    load(url) {
         let Win = Window(require('../' + url));
 
-        if (!isForce && this.windows[url]) return false
-        else this.setState({
-            windows: {[url]: <Win key={url}/>}
+        this.setState((prevState) => {
+            prevState.windows.set(url,<Win url={url} key={url} delete={this.delete.bind(this)}/>)
+            return prevState
         });
-        return true
+        return url
+    }
+
+    delete(url) {
+        this.setState((prevState) => {
+            prevState.windows.delete(url)
+            return prevState
+        });
     }
 
     constructor(props) {
         super(props);
         this.state = {
-            windows: {},
+            windows: new Map(),
             icons: {}
         }
-        this.props.method({load: this.load.bind(this)})
+    }
+
+    componentDidMount() {
+        this.load('text/')
+        this.load('game/')
     }
 
     render() {
         return (
             <>
-                {Object.values(this.state.windows)}
+                {[...this.state.windows.values()]}
             </>
         )
     }

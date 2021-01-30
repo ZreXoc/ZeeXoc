@@ -4,25 +4,11 @@ import './Stylesheet/basic.css';
 import {Container, Os} from "./Lyros";
 
 class App extends Component {
-    container={
-        method:{}
-    }
-    constructor(props) {
-        super(props);
-    }
-
-    componentDidMount() {
-        console.log(this.container)
-        this.container.method.load('text',true)
-    }
-
     render() {
         return (
-            <Container method={method =>this.container.method = method}/>
+            <Container/>
         );
     }
-}
-function debug() {
 }
 
 export default App;

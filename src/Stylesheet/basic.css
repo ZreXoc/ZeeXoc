@@ -12,6 +12,8 @@ body {
     bottom: 0;
     right: 0;
     background-color: var(--col-3);
+    overflow: hidden;
+
 }
 
 .app-window {
