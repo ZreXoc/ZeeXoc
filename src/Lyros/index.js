@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+import cookie from 'react-cookies';
 import {Interval2D} from "./offset";
 import {Header, Body, Footer, Title, DeleteButton} from "./display";
 
@@ -55,7 +56,7 @@ function Window(require) {
 
         config = {
             ...Object.assign({}, WINDOW_DEFAULT_CONFIG, config),
-            url:this.props.url
+            hash: this.props.hash
         }
 
         #_interval;
@@ -110,7 +111,7 @@ function Window(require) {
                     ref={ref => this.ref = ref}>
                     <Header>
                         <Title>{this.state.title}</Title>
-                        <DeleteButton delete={()=>this.props.delete(this.config.url)}/>
+                        <DeleteButton delete={() => this.props.delete(this.config.hash)}/>
                     </Header>
                     <Body>
                         <WrappedComponent/>
@@ -123,45 +124,51 @@ function Window(require) {
 
 }
 
-export class Container extends Component {
-    load(url) {
-        let Win = Window(require('../' + url));
 
-        this.setState((prevState) => {
-            prevState.windows.set(url,<Win url={url} key={url} delete={this.delete.bind(this)}/>)
-            return prevState
+export class Container extends Component {
+    load(url, isRewrite) {
+        let Win = Window(require('../' + url));
+        let hash = Os.hashCode(url);
+        this.setState(state => {
+            if (isRewrite || !state.windows[hash])
+                state.windows[hash] = <Win hash={hash} key={hash} delete={this.delete.bind(this)}/>
+            Os.saveState(state)
+            return state
         });
-        return url
+        return hash
     }
 
-    delete(url) {
-        this.setState((prevState) => {
-            prevState.windows.delete(url)
-            return prevState
+    delete(hash) {
+        this.setState(state => {
+            state.windows[hash] = undefined;
+            Os.saveState(state);
+            return state
         });
     }
 
     constructor(props) {
         super(props);
+
         this.state = {
-            windows: new Map(),
-            icons: {}
+            windows: {},
+            icons: {},
         }
     }
 
     componentDidMount() {
-        this.load('text/')
         this.load('game/')
+        this.load('text/')
     }
 
     render() {
         return (
             <>
-                {[...this.state.windows.values()]}
+                {Object.values(this.state.windows)}
             </>
         )
     }
 }
+
 
 export class Os {
     element;
@@ -173,6 +180,46 @@ export class Os {
 
     static addEventListener(element, type, listener) {
         return new EventListener(element, type, listener)
+    }
+
+    static saveState(state) {
+        cookie.save('appState'
+            , state
+            , {expires: new Date(new Date().getTime() + 24 * 3600 * 1000 * 15)})//half month
+    }
+
+    static loadState() {
+        let c = cookie.load('appState');
+        if (!c) return null;
+        return c
+    }
+
+    static hashCode(string) {
+        let hash = 0, i, chr;
+        if (string.length === 0) return hash;
+        for (i = 0; i < string.length; i++) {
+            chr = string.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+    }
+
+    static mapChangeObj(map) {
+        let obj = {};
+        for (let [k, v] of map) {
+            obj[k] = v;
+        }
+        return obj;
+    }
+
+    static objChangeMap(obj) {
+        let map = new Map();
+        for (let key in obj) {
+            if (!obj.hasOwnProperty(key)) continue;
+            map.set(key, obj[key]);
+        }
+        return map;
     }
 
     constructor(element) {
