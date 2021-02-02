@@ -100,6 +100,10 @@ function Window(require) {
             });
             this.interval(Interval2D.toInterval2D(this.ref))
             if (this.config.draggable) this.setDrag();
+            this.props.action({
+                interval: newInterval => this.interval(newInterval),
+                temp: 'temp'
+            })
         }
 
 
@@ -126,14 +130,37 @@ function Window(require) {
 
 
 export class Container extends Component {
+    windows = {
+        0: {
+            url: '',
+            offset: new Interval2D(),
+            actions: {}
+        },
+        urlByHash: {},
+        hashByUrl: {}
+    }
+
     load(url, isRewrite) {
         let Win = Window(require('../' + url));
         let hash = Os.hashCode(url);
+        let action;
         this.setState(state => {
-            if (isRewrite || !state.windows[hash])
-                state.windows[hash] = <Win hash={hash} key={hash} delete={this.delete.bind(this)}/>
-            Os.saveState(state)
+            if (isRewrite || !state.windows[hash]) {
+                state.windows[hash] =
+                    <Win hash={hash} key={hash}
+                         action={act => action = act}
+                         delete={this.delete.bind(this)}/>
+            }
             return state
+        }, () => {
+            this.windows.urlByHash[hash] = url;
+            this.windows.hashByUrl[url] = hash;
+            this.windows[hash] = {
+                url: url,
+                offset: action.interval(),
+                action: action
+            }
+            this.saveCookie()
         });
         return hash
     }
@@ -141,9 +168,22 @@ export class Container extends Component {
     delete(hash) {
         this.setState(state => {
             state.windows[hash] = undefined;
-            Os.saveState(state);
+            Os.cookie(state);
             return state
         });
+    }
+
+    saveCookie() {
+        let state = {};
+        Object.values(this.windows.hashByUrl).forEach(hash=>{
+            state[hash] = {
+                url:this.windows[hash].url,
+                offset: this.windows[hash].action.interval()
+            }
+        })
+        console.log(state)
+        Os.cookie('appState', state);
+        console.log(Os.cookie('appState'))
     }
 
     constructor(props) {
@@ -182,16 +222,12 @@ export class Os {
         return new EventListener(element, type, listener)
     }
 
-    static saveState(state) {
-        cookie.save('appState'
+    static cookie(name, state) {
+        if (!name) return cookie.load(name)
+        if (!state) return  cookie.load(name)
+        cookie.save(name
             , state
             , {expires: new Date(new Date().getTime() + 24 * 3600 * 1000 * 15)})//half month
-    }
-
-    static loadState() {
-        let c = cookie.load('appState');
-        if (!c) return null;
-        return c
     }
 
     static hashCode(string) {
