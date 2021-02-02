@@ -111,6 +111,7 @@ function Window(require) {
             return (
                 <div
                     className='app-window'
+                    id={'app-window-'+this.config.title}
                     style={this.state.style}
                     ref={ref => this.ref = ref}>
                     <Header>
@@ -141,7 +142,7 @@ export class Container extends Component {
     }
 
     load(url, isRewrite) {
-        let Win = Window(require('../' + url));
+        let Win = Window(require('../pages/' + url));
         let hash = Os.hashCode(url);
         let action;
         this.setState(state => {
@@ -157,7 +158,6 @@ export class Container extends Component {
             this.windows.hashByUrl[url] = hash;
             this.windows[hash] = {
                 url: url,
-                offset: action.interval(),
                 action: action
             }
             this.saveCookie()
@@ -167,10 +167,12 @@ export class Container extends Component {
 
     delete(hash) {
         this.setState(state => {
-            state.windows[hash] = undefined;
-            Os.cookie(state);
+            delete state.windows[hash];
+            delete this.windows.hashByUrl[this.windows.urlByHash[hash]];
+            delete this.windows.urlByHash[hash];
+            delete this.windows[hash];
             return state
-        });
+        },()=>this.saveCookie());
     }
 
     saveCookie() {
@@ -178,12 +180,20 @@ export class Container extends Component {
         Object.values(this.windows.hashByUrl).forEach(hash=>{
             state[hash] = {
                 url:this.windows[hash].url,
-                offset: this.windows[hash].action.interval()
             }
         })
-        console.log(state)
         Os.cookie('appState', state);
-        console.log(Os.cookie('appState'))
+        console.log(state)
+    }
+
+    loadCookie(){
+        let c= Os.cookie('appState');
+        let state={};
+        if (!c) return null;
+        for (let hash in c) {
+            if(!c.hasOwnProperty(hash)) continue;
+            this.load(c[hash].url);
+        }
     }
 
     constructor(props) {
@@ -196,13 +206,14 @@ export class Container extends Component {
     }
 
     componentDidMount() {
-        this.load('game/')
-        this.load('text/')
+        this.loadCookie();
     }
 
     render() {
         return (
             <>
+                <button onClick={()=>this.load('game/')}>game</button>
+                <button onClick={()=>this.load('text')}>text</button>
                 {Object.values(this.state.windows)}
             </>
         )
@@ -212,11 +223,6 @@ export class Container extends Component {
 
 export class Os {
     element;
-
-    static load(src) {
-        let Win = Window(require('../' + src));
-        return <Win/>;
-    }
 
     static addEventListener(element, type, listener) {
         return new EventListener(element, type, listener)

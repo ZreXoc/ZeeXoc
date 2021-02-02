@@ -1,3 +1,3 @@
 git add .
-git commit -m 'cookie-achieved'
+git commit -m 'update'
 git push origin master

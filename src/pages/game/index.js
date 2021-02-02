@@ -1,11 +1,11 @@
 import React, {Component} from "react";
-import {Container} from "../Lyros";
+import {Container} from "../../Lyros";
 
 const config = {
-    title: 'text',
+    title: 'game',
     draggable: true
 }
-class TextBox extends Component {
+class Game extends Component {
     constructor(props) {
         super(props);
         this.state = {}
@@ -20,4 +20,4 @@ class TextBox extends Component {
     }
 }
 
-export {TextBox as Component,config}
+export {Game as Component,config}
