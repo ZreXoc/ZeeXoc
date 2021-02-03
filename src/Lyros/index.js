@@ -213,7 +213,8 @@ export class Container extends Component {
         return (
             <>
                 <button onClick={()=>this.load('game/')}>game</button>
-                <button onClick={()=>this.load('text')}>text</button>
+                <button onClick={()=>this.load('text/')}>text</button>
+                <button onClick={()=>this.load('pageCount/')}>统计</button>
                 {Object.values(this.state.windows)}
             </>
         )

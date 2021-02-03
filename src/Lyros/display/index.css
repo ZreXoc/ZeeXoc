@@ -9,7 +9,11 @@
     margin: 0em;
     background-color: var(--col-1);
     color: var(--col-2);
+    overflow: auto;
 }
+.app-window > [w-type="body"]::-webkit-scrollbar {
+     display: none;
+ }
 
 .app-window > [w-type="footer"] {
     bottom: 0;
