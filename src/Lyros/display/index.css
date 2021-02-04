@@ -23,7 +23,6 @@
 }
 
 .app-window > [w-type="header"] > span {
-    user-select: none;
     cursor: default;
 }
 

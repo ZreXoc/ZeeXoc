@@ -3,7 +3,6 @@
  */
 import React from 'react';
 import d3 from 'd3-3';
-console.log("react",d3,React);
 
 const config = {
     title: '算法可视化',
@@ -14,8 +13,8 @@ const colorRed = "#ff3d00";
 const COLOR_SELECTED = "#ff9100";
 const COLOR_DEFAULT = "#00897b";
 const colorGreen = "#00e676";
-const SPEED = 10;
-const SIZE = 20
+const SPEED = 1;
+const SIZE = 100;
 
 function getSortData(count=SIZE){
     let arr = [], i=0;
@@ -298,7 +297,7 @@ class SortGraph extends React.Component{
         let max = Math.max(...dataV);
         //console.log("render SortGraph",{max,min});
         let linear = d3.scale.linear().domain([0,max]).range([0,height-paddingBottom-10]);
-        let w = 30;
+        let w = 5;
         let dom = data.map((value, i)=>{
             let h = linear(value.v);
             let x = i*(w+5);

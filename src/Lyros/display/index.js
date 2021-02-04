@@ -1,5 +1,6 @@
 import React from "react";
 import './index.css';
+import { Button } from 'antd';
 
 function Header(props) {
     return (<div
@@ -12,7 +13,7 @@ function Title(props) {
     return <span>{props.children}</span>;
 }
 function DeleteButton(props) {
-    return <button onClick={props.delete}>×</button>;
+    return <Button type="primary" onClick={props.delete}>×</Button>;
 }
 function Body(props) {
     return (
